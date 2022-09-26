@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Tweet;
+use App\Models\Reply;
 use Illuminate\Validation\Rule;
 
 class TweetController extends Controller
@@ -19,7 +20,10 @@ class TweetController extends Controller
         $tweets = Tweet::orderByDesc('created_at')
             ->with('user')
             ->paginate(5);
-        return view('tweets.list', ['tweets' => $tweets]);
+        $replies = Reply::orderByDesc('created_at')
+            ->with('tweet')
+            ->paginate(5);
+        return view('tweets.list', ['tweets' => $tweets, 'replies' => $replies]);
     }
 
     public function create()

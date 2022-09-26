@@ -19,7 +19,7 @@ class Tweet extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function replies() {
+    public function reply() {
         return $this->hasMany(Reply::class);
     }
 }

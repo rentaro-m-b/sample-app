@@ -25,7 +25,8 @@ Route::get('/dashboard', function () {
 })->middleware(['auth'])->name('dashboard');
 
 require __DIR__.'/auth.php';
-
+// 「->prefix('tweets')->name('tweets')」で株に指定した「.???」の親ルート的なものになっている。
+// {tweet}は変数であり、現在はtweet_idが入るようにviewではなっている。
 Route::controller(TweetController::class)->prefix('tweets')->name('tweets')->group(function() {
     Route::get('/', 'list');
     Route::get('/create', 'create')->name('.create');
@@ -36,7 +37,7 @@ Route::controller(TweetController::class)->prefix('tweets')->name('tweets')->gro
     Route::delete('/{tweet}', 'destroy')->name('.destroy');
 });
 Route::controller(ReplyController::class)->prefix('replies')->name('replies')->group(function() {
-    Route::get('/create', 'create')->name('.create');
-    Route::post('/create', 'store')->name('.store');
+    Route::get('/{tweet}/create', 'create')->name('.create');
+    Route::post('/{tweet}/create', 'store')->name('.store');
     Route::delete('/{reply}', 'destroy')->name('.destroy');
 });

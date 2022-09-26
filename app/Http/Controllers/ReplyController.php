@@ -15,7 +15,7 @@ class ReplyController extends Controller
     }
 
     public function create(Tweet $tweet)
-    {
+    {   
         return view('replies.create', ['tweet' => $tweet]);
     }
 
@@ -25,10 +25,9 @@ class ReplyController extends Controller
             'contents' => ['required', 'string', 'max:400'],
             'tweet_id' => ['integer', Rule::exists('tweets', 'id')],
             //'parent_tweet_id' => ['integer', 'nullable', 'max:255']
-
         ]);
-  
         Reply::create($data);
+        return redirect()->route('tweets')->with('status', '投稿完了');
     }
 
     public function destroy(Request $request)

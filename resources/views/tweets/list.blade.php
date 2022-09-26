@@ -31,6 +31,12 @@
                          <a href="{{ route('tweets.show', $tweet->id) }}">
                               <p class="text-md">{{$tweet->contents}}</p>
                          </a>
+                         @foreach ($replies as $reply)
+                         @if ($tweet->id == $reply->tweet_id)
+                         <p class="text-md">{{$reply->contents}}</p>
+                         @endif
+                         @endforeach
+
                     </div>
                     @endforeach
                </div>
