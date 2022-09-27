@@ -25,16 +25,33 @@ Route::get('/dashboard', function () {
 })->middleware(['auth'])->name('dashboard');
 
 require __DIR__.'/auth.php';
-// 「->prefix('tweets')->name('tweets')」で株に指定した「.???」の親ルート的なものになっている。
+
+Route::controller(UserController::class)->prefix('users')->name('users')->group(function() {
+    Route::post('/block', 'add_block')->name('.add_block');
+    Route::delete('/block', 'delete_block')->name('.delete_block');
+    Route::post('/follow', 'add_follow')->name('.add_follow');
+    Route::delete('/follow', 'delete_follow')->name('.delete_follow');
+    Route::get('/search', 'search')->name('.search');
+});
+
+// 「->prefix('tweets')->name('tweets')」で下部に指定した「.???」の親ルート的なものになっている。
 // {tweet}は変数であり、現在はtweet_idが入るようにviewではなっている。
 Route::controller(TweetController::class)->prefix('tweets')->name('tweets')->group(function() {
+    // tweetの取得（リプライも取得している）
     Route::get('/', 'list');
-    Route::get('/create', 'create')->name('.create');
-    Route::post('/create', 'store')->name('.store');
-    Route::get('/{tweet}', 'show')->name('.show');
-    Route::get('/{tweet}/edit', 'edit')->name('.edit');
-    Route::put('/{tweet}', 'update')->name('.update');
-    Route::delete('/{tweet}', 'destroy')->name('.destroy');
+    Route::post('/', 'store');
+    // Route::get('/create', 'create')->name('.create');
+    // Route::post('/create', 'store')->name('.store');
+    // Route::get('/{tweet}', 'show')->name('.show');
+    // Route::get('/{tweet}/edit', 'edit')->name('.edit');
+    Route::put('/', 'update')->name('.update');
+    Route::delete('/', 'destroy')->name('.destroy');
+    // user_idとtweet_idを引数とすると機能する
+    Route::post('/bookmarks', 'store_bookmark')->name('.store_bookmark');
+    Route::delete('/bookmarks', 'destroy_bookmark')->name('.destroy_bookmark');
+    Route::post('/like', 'add_like')->name('.add_like');
+    Route::delete('/like', 'delete_like')->name('.delete_like');
+    Route::get('/search', 'search')->name('.search');
 });
 Route::controller(ReplyController::class)->prefix('replies')->name('replies')->group(function() {
     Route::get('/{tweet}/create', 'create')->name('.create');

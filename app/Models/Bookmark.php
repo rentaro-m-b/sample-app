@@ -5,25 +5,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Tweet extends Model
+class Bookmark extends Model
 {
     use HasFactory;
 
-    //protected $guarded = ['id', 'created_at'];
     protected $fillable = [
-        'contents',
         'user_id',
+        'tweet_id'
     ];
 
     public function user() {
         return $this->belongsTo(User::class);
     }
 
-    public function reply() {
-        return $this->hasMany(Reply::class);
-    }
-
-    public function bookmark() {
-        return $this->hasMany(Bookmark::class);
+    public function tweet() {
+        return $this->belongsTo(Tweet::class);
     }
 }
