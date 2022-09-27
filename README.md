@@ -77,6 +77,7 @@ git push origin master
 git pull
 # branch確認とbranch作成
 git branch, git branch branch
+git switch -c feature/hello-world
 # branch移動
 git checkout branch
 # branch同士がどこで分岐しているかを取得(commitハッシュの取得)
