@@ -15,7 +15,7 @@ class TweetController extends Controller
 
     public function __construct()
     {
-        $this->middleware('auth')->except(['list', 'show', 'store_test']);
+        $this->middleware('auth')->except(['list', 'destroy', 'store_bookmark', 'store', 'store_like']);
     }
 
     public function list()
@@ -29,14 +29,8 @@ class TweetController extends Controller
         return [$tweets, $replies];
     }
 
-    // public function create()
-    // {
-    //     return view('tweets.create');
-    // }
-
     public function store(Request $request)
     {   
-        return 1;
         $data = $request->validate([
             'contents' => ['required', 'string', 'max:400'],
             'user_id' => ['integer', Rule::exists('users', 'id')],
@@ -46,16 +40,6 @@ class TweetController extends Controller
   
        Tweet::create($data);
     }
-
-    // public function show(Tweet $tweet)
-    // {
-    //     return view('tweets.show', ['tweet' => $tweet]);
-    // }
-
-    // public function edit(Tweet $tweet)
-    // {
-    //     return view('tweets.edit', ['tweet' => $tweet]);
-    // }
 
     public function update(Request $request)
     {
@@ -73,20 +57,14 @@ class TweetController extends Controller
         return $tweet;
     }
 
-    public function destroy(Request $request)
+    public function destroy(Tweet $tweet)
     {   
-        $data = $request->validate([
-            'tweet_id' => ['integer', Rule::exists('tweets', 'id')],
-        ]);
-        //$this->authorize('edit', $tweet);
-        $tweet = Tweet::find($data['tweet_id']);
+        // return $tweet;
         $tweet->delete();
-        return 'ok';
     }
 
     public function store_bookmark(Request $request)
     {
-        //$this->authorize('edit', $tweet);
         $data = $request->validate([
             'user_id' => ['integer', Rule::exists('users', 'id')],
             'tweet_id' => ['integer', Rule::exists('tweets', 'id')],
@@ -106,7 +84,7 @@ class TweetController extends Controller
         $bookmark->delete();
     }
 
-    public function add_like(Request $request)
+    public function store_like(Request $request)
     {
         //$this->authorize('edit', $tweet);
         $data = $request->validate([
@@ -118,7 +96,7 @@ class TweetController extends Controller
         Like::create($data);
     }
 
-    public function delete_like(Like $like)
+    public function destroy_like(Like $like)
     {
         //$this->authorize('edit', $tweet);
         $like->delete();
