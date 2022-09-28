@@ -35,17 +35,14 @@ Route::controller(TweetController::class)->prefix('tweets')->name('tweets')->gro
     // tweetの取得（リプライも取得している）
     Route::get('/', 'list');
     Route::post('/', 'store');
-    Route::put('/', 'update')->name('.update');
-    Route::delete('/{tweet}', 'destroy')->name('.destroy');
+    Route::put('/', 'update');
+    Route::delete('/{tweet}', 'destroy');
+    Route::post('/replies', 'store_reply');
+    Route::delete('/replies/{reply}', 'destroy_reply');
     // user_idとtweet_idを引数とすると機能する
-    Route::post('/bookmarks', 'store_bookmark')->name('.store_bookmark');
-    Route::delete('/bookmarks', 'destroy_bookmark')->name('.destroy_bookmark');
-    Route::post('/likes', 'store_like')->name('.store_like');
-    Route::delete('/likes', 'destroy_like')->name('.destroy_like');
-    Route::get('/search', 'search')->name('.search');
-});
-Route::controller(ReplyController::class)->prefix('replies')->name('replies')->group(function() {
-    Route::get('/{tweet}/create', 'create')->name('.create');
-    Route::post('/{tweet}/create', 'store')->name('.store');
-    Route::delete('/{reply}', 'destroy')->name('.destroy');
+    Route::post('/bookmarks', 'store_bookmark');
+    Route::delete('/bookmarks/{bookmark}', 'destroy_bookmark');
+    Route::post('/likes', 'store_like');
+    Route::delete('/likes/{like}', 'destroy_like');
+    Route::get('/search', 'search');
 });

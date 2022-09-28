@@ -15,7 +15,19 @@ class TweetController extends Controller
 
     public function __construct()
     {
-        $this->middleware('auth')->except(['list', 'destroy', 'store_bookmark', 'store', 'store_like']);
+        $this->middleware('auth')->except([
+            'list',
+            'destroy',
+            'store_reply',
+            'destroy_reply',
+            'store_bookmark',
+            'destroy_bookmark',
+            'store_like', 
+            'destroy_like', 
+            'store', 
+            'store_like',
+            'search',
+        ]);
     }
 
     public function list()
@@ -54,13 +66,31 @@ class TweetController extends Controller
         $tweet = Tweet::find($data['tweet_id']);
         $tweet->contents = $data['contents'];
         $tweet->save();
-        return $tweet;
+        // return $tweet;
     }
 
     public function destroy(Tweet $tweet)
     {   
-        // return $tweet;
+        $bookmarks = Bookmark::where('tweet_id', $tweet->id)->delete();
+        $likes = Like::where('tweet_id', $tweet->id)->delete();
+        $replies = Reply::where('tweet_id', $tweet->id)->delete();
+
         $tweet->delete();
+    }
+
+    public function store_reply(Request $request)
+    {
+        $data = $request->validate([
+            'tweet_id' => ['integer', Rule::exists('tweets', 'id')],
+            'contents' => ['required', 'string', 'max:400'],
+        ]);
+
+        Reply::create($data);
+    }
+
+    public function destroy_reply(Reply $reply)
+    {
+        $reply->delete();
     }
 
     public function store_bookmark(Request $request)
@@ -73,14 +103,8 @@ class TweetController extends Controller
         Bookmark::create($data);
     }
 
-    public function destroy_bookmark(Request $request)
-    {
-        //$this->authorize('edit', $tweet);
-        $data = $request->validate([
-            'bookmark_id' => ['integer', Rule::exists('bookmarks', 'id')],
-        ]);
-        
-        $bookmark = Bookmark::find($data['bookmark_id']);
+    public function destroy_bookmark(Bookmark $bookmark)
+    {   
         $bookmark->delete();
     }
 
@@ -105,7 +129,7 @@ class TweetController extends Controller
     public function search(Request $request)
     {
         $tweets = Tweet::paginate(20);
-        $key = $request->input('key');
+        $key = $request->key;
 
         $query = Tweet::query();
         $query->where('contents', 'like', '%'.$key.'%');
