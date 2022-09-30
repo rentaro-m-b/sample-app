@@ -12,11 +12,9 @@ class UserController extends Controller
 {
     public function add_block(Request $request)
     {
-        //$this->authorize('edit', $tweet);
         $data = $request->validate([
             'user_id' => ['integer', Rule::exists('users', 'id')],
             'blocked_user_id' => ['integer', Rule::exists('users', 'id')],
-            //'parent_tweet_id' => ['integer', 'nullable', 'max:255']
         ]);
 
         Block::create($data);
@@ -24,17 +22,14 @@ class UserController extends Controller
 
     public function delete_block(Block $block)
     {
-        //$this->authorize('edit', $tweet);
         $block->delete();
     }
 
     public function add_follow(Request $request)
     {
-        //$this->authorize('edit', $tweet);
         $data = $request->validate([
             'user_id' => ['integer', Rule::exists('users', 'id')],
             'followee_id' => ['integer', Rule::exists('users', 'id')],
-            //'parent_tweet_id' => ['integer', 'nullable', 'max:255']
         ]);
 
         Block::create($data);
@@ -42,7 +37,6 @@ class UserController extends Controller
 
     public function delete_follow(Follow $follow)
     {
-        //$this->authorize('edit', $tweet);
         $follow->delete();
     }
 

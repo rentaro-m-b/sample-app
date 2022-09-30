@@ -9,6 +9,8 @@ use App\Models\Bookmark;
 use App\Models\Like;
 use App\Models\User;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Schema;
+
 
 class TweetController extends Controller
 {
@@ -17,6 +19,7 @@ class TweetController extends Controller
     {
         $this->middleware('auth')->except([
             'list',
+            'update',
             'destroy',
             'store_reply',
             'destroy_reply',
@@ -35,107 +38,181 @@ class TweetController extends Controller
         $tweets = Tweet::orderByDesc('created_at')
             ->paginate(5);
         $replies = Reply::orderByDesc('created_at')
-            // ->with('tweet')
             ->paginate(5);
-        // return view('tweets.list', ['tweets' => $tweets, 'replies' => $replies]);
-        return [$tweets, $replies];
+        $responseBody = [$tweets, $replies];
+        $responseCode = 200;
+
+        return response($responseBody, $responseCode)
+            ->header('Content-Type', 'application/json');
     }
 
     public function store(Request $request)
     {   
-        $data = $request->validate([
-            'contents' => ['required', 'string', 'max:400'],
-            'user_id' => ['integer', Rule::exists('users', 'id')],
-            //'parent_tweet_id' => ['integer', 'nullable', 'max:255']
+        if (!$request->filled('user_id')) {
+            $responseBody = 'user_id required.';
+            $responseCode = 400;
+        } elseif (!$request->has('contents')) {
+            $responseBody = 'contents requierd.';
+            $responseCode = 400;
+        } else {
+            $data = $request->validate([
+                'contents' => ['required', 'string', 'max:400'],
+                'user_id' => ['integer', Rule::exists('users', 'id')],
+            ]);
+            Tweet::create($data);
+            $responseBody = 'ok';
+            $responseCode = 200;
+        }
 
-        ]);
-  
-       Tweet::create($data);
+        return response($responseBody, $responseCode)
+            ->header('Content-Type', 'text/plain');
     }
 
-    public function update(Request $request)
+    public function update(Request $request, Tweet $tweet)
     {
-        //$this->authorize('edit', $tweet);
-        $data = $request->validate([
-            'contents' => ['required', 'string', 'max:400'],
-            'user_id' => ['integer', Rule::exists('users', 'id')],
-            'tweet_id' => ['integer', Rule::exists('tweets', 'id')],
-        ]);
+        if (!$request->has('contents')) {
+            $responseBody = 'contents requierd.';
+            $responseCode = 400;
+        } else {
+            $data = $request->validate([
+                'contents' => ['required', 'string', 'max:400'],
+            ]);
+            $tweet->contents = $data['contents'];
+            $tweet->save();
+            $responseBody = 'ok';
+            $responseCode = 200;
+        }
 
-        // $tweet->update($data);
-        $tweet = Tweet::find($data['tweet_id']);
-        $tweet->contents = $data['contents'];
-        $tweet->save();
-        // return $tweet;
+        return response($responseBody, $responseCode)
+            ->header('Content-Type', 'text/plain');
     }
 
     public function destroy(Tweet $tweet)
     {   
-        $bookmarks = Bookmark::where('tweet_id', $tweet->id)->delete();
-        $likes = Like::where('tweet_id', $tweet->id)->delete();
-        $replies = Reply::where('tweet_id', $tweet->id)->delete();
-
+        Bookmark::where('tweet_id', $tweet->id)->delete();
+        Like::where('tweet_id', $tweet->id)->delete();
+        Schema::disableForeignKeyConstraints();
         $tweet->delete();
+        Schema::enableForeignKeyConstraints();
+        $responseBody = 'ok';
+        $responseCode = 200;
+        
+        return response($responseBody, $responseCode)
+            ->header('Content-Type', 'text/plain');
     }
 
     public function store_reply(Request $request)
     {
-        $data = $request->validate([
-            'tweet_id' => ['integer', Rule::exists('tweets', 'id')],
-            'contents' => ['required', 'string', 'max:400'],
-        ]);
+        if (!$request->filled('tweet_id')) {
+            $responseBody = 'tweet_id required.';
+            $responseCode = 400;
+        } elseif (!$request->has('contents')) {
+            $responseBody = 'contents requierd.';
+            $responseCode = 400;
+        } else {
+            $data = $request->validate([
+                'tweet_id' => ['integer', Rule::exists('tweets', 'id')],
+                'contents' => ['required', 'string', 'max:400'],
+            ]);
+            Reply::create($data);
+            $responseBody = 'ok';
+            $responseCode = 200;
+        }
 
-        Reply::create($data);
+        return response($responseBody, $responseCode)
+            ->header('Content-Type', 'text/plain');
     }
 
     public function destroy_reply(Reply $reply)
     {
         $reply->delete();
+        $responseBody = 'ok';
+        $responseCode = 200;
+
+        return response($responseBody, $responseCode)
+            ->header('Content-Type', 'text/plain');
     }
 
     public function store_bookmark(Request $request)
     {
-        $data = $request->validate([
-            'user_id' => ['integer', Rule::exists('users', 'id')],
-            'tweet_id' => ['integer', Rule::exists('tweets', 'id')],
-        ]);
-
-        Bookmark::create($data);
+        if (!$request->filled('user_id')) {
+            $responseBody = 'user_id required.';
+            $responseCode = 400;
+        } elseif (!$request->filled('tweet_id')) {
+            $responseBody = 'tweet_id requierd.';
+            $responseCode = 400;
+        } else {
+            $data = $request->validate([
+                'user_id' => ['integer', Rule::exists('users', 'id')],
+                'tweet_id' => ['integer', Rule::exists('tweets', 'id')],
+            ]);
+            Bookmark::create($data);
+            $responseBody = 'ok';
+            $responseCode = 200;
+        }
+        
+        return response($responseBody, $responseCode)
+            ->header('Content-Type', 'text/plain');
     }
 
     public function destroy_bookmark(Bookmark $bookmark)
     {   
         $bookmark->delete();
+        $responseBody = 'ok';
+        $responseCode = 200;
+
+        return response($responseBody, $responseCode)
+            ->header('Content-Type', 'text/plain');
     }
 
     public function store_like(Request $request)
     {
-        //$this->authorize('edit', $tweet);
-        $data = $request->validate([
-            'user_id' => ['integer', Rule::exists('users', 'id')],
-            'tweet_id' => ['integer', Rule::exists('tweets', 'id')],
-            //'parent_tweet_id' => ['integer', 'nullable', 'max:255']
-        ]);
+        if (!$request->filled('user_id')) {
+            $responseBody = 'user_id required.';
+            $responseCode = 400;
+        } elseif (!$request->filled('tweet_id')) {
+            $responseBody = 'tweet_id requierd.';
+            $responseCode = 400;
+        } else {
+            $data = $request->validate([
+                'user_id' => ['integer', Rule::exists('users', 'id')],
+                'tweet_id' => ['integer', Rule::exists('tweets', 'id')],
+            ]);
+            Like::create($data);
+            $responseBody = 'ok';
+            $responseCode = 200;
+        }
 
-        Like::create($data);
+        return response($responseBody, $responseCode)
+            ->header('Content-Type', 'text/plain');
     }
 
     public function destroy_like(Like $like)
     {
-        //$this->authorize('edit', $tweet);
         $like->delete();
+        $responseBody = 'ok';
+        $responseCode = 200;
+
+        return response($responseBody, $responseCode)
+            ->header('Content-Type', 'text/plain');
     }
 
     public function search(Request $request)
     {
-        $tweets = Tweet::paginate(20);
-        $key = $request->key;
+        if (!$request->filled('key')) {
+            $responseBody = 'key required.';
+            $responseCode = 400;
+        } else {
+            $tweets = Tweet::paginate(20);
+            $key = $request->key;
+            $query = Tweet::query();
+            $query->where('contents', 'like', '%'.$key.'%');
+            $tweets = $query->paginate(20);
+            $responseBody = $tweets;
+            $responseCode = 200;
+        }
 
-        $query = Tweet::query();
-        $query->where('contents', 'like', '%'.$key.'%');
-
-        $tweets = $query->paginate(20);
-
-        return $tweets;
+        return response($responseBody, $responseCode)
+            ->header('Content-Type', 'application/json');
     }
 }

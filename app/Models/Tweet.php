@@ -9,7 +9,6 @@ class Tweet extends Model
 {
     use HasFactory;
 
-    //protected $guarded = ['id', 'created_at'];
     protected $fillable = [
         'contents',
         'user_id',

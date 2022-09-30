@@ -29,20 +29,16 @@ Route::controller(UserController::class)->prefix('users')->name('users')->group(
     Route::get('/search', 'search')->name('.search');
 });
 
-// 「->prefix('tweets')->name('tweets')」で下部に指定した「.???」の親ルート的なものになっている。
-// {tweet}は変数であり、現在はtweet_idが入るようにviewではなっている。
-Route::controller(TweetController::class)->prefix('tweets')->name('tweets')->group(function() {
-    // tweetの取得（リプライも取得している）
+Route::controller(TweetController::class)->prefix('tweet')->name('tweet')->group(function() {
     Route::get('/', 'list');
     Route::post('/', 'store');
-    Route::put('/', 'update');
+    Route::put('/{tweet}', 'update');
     Route::delete('/{tweet}', 'destroy');
-    Route::post('/replies', 'store_reply');
-    Route::delete('/replies/{reply}', 'destroy_reply');
-    // user_idとtweet_idを引数とすると機能する
-    Route::post('/bookmarks', 'store_bookmark');
-    Route::delete('/bookmarks/{bookmark}', 'destroy_bookmark');
-    Route::post('/likes', 'store_like');
-    Route::delete('/likes/{like}', 'destroy_like');
+    Route::post('/reply', 'store_reply');
+    Route::delete('/reply/{reply}', 'destroy_reply');
+    Route::post('/bookmark', 'store_bookmark');
+    Route::delete('/bookmark/{favorites}', 'destroy_favorites');
+    Route::post('/like', 'store_like');
+    Route::delete('/like/{like}', 'destroy_like');
     Route::get('/search', 'search');
 });
