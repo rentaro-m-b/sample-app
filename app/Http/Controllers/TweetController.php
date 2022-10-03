@@ -11,6 +11,8 @@ use App\Models\User;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Schema;
 use App\Http\Requests\StorePostRequest;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 
 class TweetController extends Controller
@@ -53,48 +55,47 @@ class TweetController extends Controller
      * @param  \App\Http\Requests\StorePostRequest  $request
      * @return Illuminate\Http\Response
      */
-    public function store(StorePostRequest $request)
+    public function store(Request $request)
     {   
-        $validated = $request->validated();
+        $validator = Validator::make($request->all(), [
+            'contents' => ['required', 'string', 'max:400'],
+            'user_id' => ['required', 'integer', Rule::exists('users', 'id')],
+        ]);
+        if ($validator->fails()) {
+            $response = response()->json([
+                'status' => 400,
+                'errors' => $validator->errors(),
+            ],400);
+            throw new HttpResponseException($response);
+        }
+        $data = $validator->safe()->only(['contents', 'user_id']);
 
-        // バリデーション済み入力データの一部を取得
-        $validated = $request->safe()->only(['user_id', 'contents']);
-        // $validated = $request->safe()->except(['user_id', 'contents']);
-
-        // if (!$request->filled('user_id')) {
-        //     $responseBody = 'user_id required.';
-        //     $responseCode = 400;
-        // } elseif (!$request->has('contents')) {
-        //     $responseBody = 'contents requierd.';
-        //     $responseCode = 400;
-        // } else {
-        //     $data = $request->validate([
-        //         'contents' => ['required', 'string', 'max:400'],
-        //         'user_id' => ['integer', Rule::exists('users', 'id')],
-        //     ]);
-        //     Tweet::create($data);
-        //     $responseBody = 'ok';
-        //     $responseCode = 200;
-        // }
-        return $validated;
-        // return response($responseBody, $responseCode)
-        //     ->header('Content-Type', 'text/plain');
+        Tweet::create($data);
+        $responseBody = 'ok';
+        $responseCode = 200;
+        
+        return response($responseBody, $responseCode)
+            ->header('Content-Type', 'text/plain');
     }
 
     public function update(Request $request, Tweet $tweet)
     {
-        if (!$request->has('contents')) {
-            $responseBody = 'contents requierd.';
-            $responseCode = 400;
-        } else {
-            $data = $request->validate([
-                'contents' => ['required', 'string', 'max:400'],
-            ]);
-            $tweet->contents = $data['contents'];
-            $tweet->save();
-            $responseBody = 'ok';
-            $responseCode = 200;
+        $validator = Validator::make($request->all(), [
+            'contents' => ['required', 'string', 'max:400'],
+        ]);
+        if ($validator->fails()) {
+            $response = response()->json([
+                'status' => 400,
+                'errors' => $validator->errors(),
+            ],400);
+            throw new HttpResponseException($response);
         }
+        $data = $validator->safe()->only(['contents']);
+
+        $tweet->contents = $data['contents'];
+        $tweet->save();
+        $responseBody = 'ok';
+        $responseCode = 200;
 
         return response($responseBody, $responseCode)
             ->header('Content-Type', 'text/plain');
@@ -116,21 +117,22 @@ class TweetController extends Controller
 
     public function store_reply(Request $request)
     {
-        if (!$request->filled('tweet_id')) {
-            $responseBody = 'tweet_id required.';
-            $responseCode = 400;
-        } elseif (!$request->has('contents')) {
-            $responseBody = 'contents requierd.';
-            $responseCode = 400;
-        } else {
-            $data = $request->validate([
-                'tweet_id' => ['integer', Rule::exists('tweets', 'id')],
-                'contents' => ['required', 'string', 'max:400'],
-            ]);
-            Reply::create($data);
-            $responseBody = 'ok';
-            $responseCode = 200;
+        $validator = Validator::make($request->all(), [
+            'contents' => ['required', 'string', 'max:400'],
+            'tweet_id' => ['required', 'integer', Rule::exists('tweets', 'id')],
+        ]);
+        if ($validator->fails()) {
+            $response = response()->json([
+                'status' => 400,
+                'errors' => $validator->errors(),
+            ],400);
+            throw new HttpResponseException($response);
         }
+        $data = $validator->safe()->only(['contents', 'tweet_id']);
+
+        Reply::create($data);
+        $responseBody = 'ok';
+        $responseCode = 200;
 
         return response($responseBody, $responseCode)
             ->header('Content-Type', 'text/plain');
@@ -148,21 +150,22 @@ class TweetController extends Controller
 
     public function store_bookmark(Request $request)
     {
-        if (!$request->filled('user_id')) {
-            $responseBody = 'user_id required.';
-            $responseCode = 400;
-        } elseif (!$request->filled('tweet_id')) {
-            $responseBody = 'tweet_id requierd.';
-            $responseCode = 400;
-        } else {
-            $data = $request->validate([
-                'user_id' => ['integer', Rule::exists('users', 'id')],
-                'tweet_id' => ['integer', Rule::exists('tweets', 'id')],
-            ]);
-            Bookmark::create($data);
-            $responseBody = 'ok';
-            $responseCode = 200;
+        $validator = Validator::make($request->all(), [
+            'tweet_id' => ['required', 'integer', Rule::exists('tweets', 'id')],
+            'user_id' => ['required', 'integer', Rule::exists('users', 'id')],
+        ]);
+        if ($validator->fails()) {
+            $response = response()->json([
+                'status' => 400,
+                'errors' => $validator->errors(),
+            ],400);
+            throw new HttpResponseException($response);
         }
+        $data = $validator->safe()->only(['tweet_id', 'user_id']);
+
+        Bookmark::create($data);
+        $responseBody = 'ok';
+        $responseCode = 200;
         
         return response($responseBody, $responseCode)
             ->header('Content-Type', 'text/plain');
@@ -180,21 +183,22 @@ class TweetController extends Controller
 
     public function store_like(Request $request)
     {
-        if (!$request->filled('user_id')) {
-            $responseBody = 'user_id required.';
-            $responseCode = 400;
-        } elseif (!$request->filled('tweet_id')) {
-            $responseBody = 'tweet_id requierd.';
-            $responseCode = 400;
-        } else {
-            $data = $request->validate([
-                'user_id' => ['integer', Rule::exists('users', 'id')],
-                'tweet_id' => ['integer', Rule::exists('tweets', 'id')],
-            ]);
-            Like::create($data);
-            $responseBody = 'ok';
-            $responseCode = 200;
+        $validator = Validator::make($request->all(), [
+            'tweet_id' => ['required', 'integer', Rule::exists('tweets', 'id')],
+            'user_id' => ['required', 'integer', Rule::exists('users', 'id')],
+        ]);
+        if ($validator->fails()) {
+            $response = response()->json([
+                'status' => 400,
+                'errors' => $validator->errors(),
+            ],400);
+            throw new HttpResponseException($response);
         }
+        $data = $validator->safe()->only(['tweet_id', 'user_id']);
+  
+        Like::create($data);
+        $responseBody = 'ok';
+        $responseCode = 200;
 
         return response($responseBody, $responseCode)
             ->header('Content-Type', 'text/plain');
@@ -212,16 +216,22 @@ class TweetController extends Controller
 
     public function search(Request $request)
     {
-        if (!$request->filled('key')) {
-            $responseBody = 'key required.';
-            $responseCode = 400;
-        } else {
-            $tweets = Tweet::paginate(20);
-            $key = $request->key;
-            $tweets = Tweet::query()->where('contents', 'like', '%'.$key.'%')->paginate(20);
-            $responseBody = $tweets;
-            $responseCode = 200;
+        $validator = Validator::make($request->all(), [
+            'key' => ['required'],
+        ]);
+        if ($validator->fails()) {
+            $response = response()->json([
+                'status' => 400,
+                'errors' => $validator->errors(),
+            ],400);
+            throw new HttpResponseException($response);
         }
+        $data = $validator->safe()->only(['key']);
+
+        $key = $data["key"];
+        $tweets = Tweet::query()->where('contents', 'like', '%'.$key.'%')->paginate(20);
+        $responseBody = $tweets;
+        $responseCode = 200;
 
         return response($responseBody, $responseCode)
             ->header('Content-Type', 'application/json');
