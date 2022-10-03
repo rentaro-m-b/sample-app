@@ -105,9 +105,7 @@ class TweetController extends Controller
     {   
         Bookmark::where('tweet_id', $tweet->id)->delete();
         Like::where('tweet_id', $tweet->id)->delete();
-        Schema::disableForeignKeyConstraints();
         $tweet->delete();
-        Schema::enableForeignKeyConstraints();
         $responseBody = 'ok';
         $responseCode = 200;
         
