@@ -10,6 +10,7 @@ use App\Models\Like;
 use App\Models\User;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Schema;
+use App\Http\Requests\StorePostRequest;
 
 
 class TweetController extends Controller
@@ -46,26 +47,38 @@ class TweetController extends Controller
             ->header('Content-Type', 'application/json');
     }
 
-    public function store(Request $request)
+    /**
+     * 新ブログポストの保存
+     *
+     * @param  \App\Http\Requests\StorePostRequest  $request
+     * @return Illuminate\Http\Response
+     */
+    public function store(StorePostRequest $request)
     {   
-        if (!$request->filled('user_id')) {
-            $responseBody = 'user_id required.';
-            $responseCode = 400;
-        } elseif (!$request->has('contents')) {
-            $responseBody = 'contents requierd.';
-            $responseCode = 400;
-        } else {
-            $data = $request->validate([
-                'contents' => ['required', 'string', 'max:400'],
-                'user_id' => ['integer', Rule::exists('users', 'id')],
-            ]);
-            Tweet::create($data);
-            $responseBody = 'ok';
-            $responseCode = 200;
-        }
+        $validated = $request->validated();
 
-        return response($responseBody, $responseCode)
-            ->header('Content-Type', 'text/plain');
+        // バリデーション済み入力データの一部を取得
+        $validated = $request->safe()->only(['user_id', 'contents']);
+        // $validated = $request->safe()->except(['user_id', 'contents']);
+
+        // if (!$request->filled('user_id')) {
+        //     $responseBody = 'user_id required.';
+        //     $responseCode = 400;
+        // } elseif (!$request->has('contents')) {
+        //     $responseBody = 'contents requierd.';
+        //     $responseCode = 400;
+        // } else {
+        //     $data = $request->validate([
+        //         'contents' => ['required', 'string', 'max:400'],
+        //         'user_id' => ['integer', Rule::exists('users', 'id')],
+        //     ]);
+        //     Tweet::create($data);
+        //     $responseBody = 'ok';
+        //     $responseCode = 200;
+        // }
+        return $validated;
+        // return response($responseBody, $responseCode)
+        //     ->header('Content-Type', 'text/plain');
     }
 
     public function update(Request $request, Tweet $tweet)
@@ -205,9 +218,7 @@ class TweetController extends Controller
         } else {
             $tweets = Tweet::paginate(20);
             $key = $request->key;
-            $query = Tweet::query();
-            $query->where('contents', 'like', '%'.$key.'%');
-            $tweets = $query->paginate(20);
+            $tweets = Tweet::query()->where('contents', 'like', '%'.$key.'%')->paginate(20);
             $responseBody = $tweets;
             $responseCode = 200;
         }
