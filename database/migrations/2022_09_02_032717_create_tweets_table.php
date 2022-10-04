@@ -16,7 +16,6 @@ return new class extends Migration
         Schema::create('tweets', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            //$table->foreignId('parent_tweet_id')->constrained('tweets');
             $table->string('contents');
             $table->timestamps();
         });

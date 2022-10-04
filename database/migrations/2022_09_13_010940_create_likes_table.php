@@ -17,6 +17,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users');
             $table->foreignId('tweet_id')->constrained('tweets');
+            $table->timestamps();
         });
     }
 
