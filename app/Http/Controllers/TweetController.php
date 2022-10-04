@@ -7,10 +7,7 @@ use App\Models\Tweet;
 use App\Models\Reply;
 use App\Models\Bookmark;
 use App\Models\Like;
-use App\Models\User;
 use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\Schema;
-use App\Http\Requests\StorePostRequest;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
@@ -20,20 +17,7 @@ class TweetController extends Controller
 
     public function __construct()
     {
-        $this->middleware('auth')->except([
-            'list',
-            'update',
-            'destroy',
-            'store_reply',
-            'destroy_reply',
-            'store_bookmark',
-            'destroy_bookmark',
-            'store_like', 
-            'destroy_like', 
-            'store', 
-            'store_like',
-            'search',
-        ]);
+        // 
     }
 
     public function list()
@@ -227,7 +211,7 @@ class TweetController extends Controller
         $data = $validator->safe()->only(['key']);
 
         $key = $data["key"];
-        $tweets = Tweet::query()->where('contents', 'like', '%'.$key.'%')->paginate(20);
+        $tweets = Tweet::whereLike('contents', $key)->paginate(20);
         $responseBody = $tweets;
         $responseCode = 200;
 
