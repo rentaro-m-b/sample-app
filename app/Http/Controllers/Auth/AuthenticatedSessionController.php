@@ -7,6 +7,9 @@ use App\Http\Requests\Auth\LoginRequest;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rules;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -28,11 +31,30 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request)
     {
-        $request->authenticate();
+        $validator = Validator::make($request->all(), [
+            'name' => ['string', 'max:255'],
+            'age' => ['integer', 'nullable'],
+            'address' => ['string', 'nullable', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255'],
+            'password' => ['required', Rules\Password::defaults()],
+        ]);
+        if ($validator->fails()) {
+            $response = response()->json([
+                'status' => 400,
+                'errors' => $validator->errors(),
+            ],400);
+            throw new HttpResponseException($response);
+        }
 
+        $request['_token'] = $request->session()->token();
+        $request->authenticate();
         $request->session()->regenerate();
 
-        return redirect()->intended(RouteServiceProvider::HOME);
+        $responseBody = 'ok';
+        $responseCode = 200;
+
+        return response($responseBody, $responseCode)
+            ->header('Content-Type', 'text/plain');
     }
 
     /**
@@ -44,11 +66,13 @@ class AuthenticatedSessionController extends Controller
     public function destroy(Request $request)
     {
         Auth::guard('web')->logout();
-
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        $responseBody = 'ok';
+        $responseCode = 200;
+
+        return response($responseBody, $responseCode)
+            ->header('Content-Type', 'text/plain');
     }
 }

@@ -8,25 +8,18 @@ use App\Models\Follow;
 use App\Models\User;
 use Illuminate\Validation\Rule;
 use App\Http\Controllers\Controller;
-use Illuminate\Auth\Events\Registered;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
-use App\Http\Requests\Auth\LoginRequest;
 
 
 class UserController extends Controller
 {
-    public function store(Request $request)
+    public function add_block(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => ['required', 'string', 'max:255'],
-            'age' => ['integer', 'nullable'],
-            'address' => ['string', 'nullable', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', Rules\Password::defaults()],
+            'blocked_user_id' => ['required', 'integer', Rule::exists('users', 'id')],
+            'user_id' => ['required', 'integer', Rule::exists('users', 'id')],
         ]);
         if ($validator->fails()) {
             $response = response()->json([
@@ -35,83 +28,57 @@ class UserController extends Controller
             ],400);
             throw new HttpResponseException($response);
         }
-        $data = $validator->safe()->only([
-            'name',
-            'age',
-            'address',
-            'email',
-            'password'
-        ]);
-        $data['password'] = Hash::make($data['password']);
-
-        $user = User::create($data);
-        return $user;
-        event(new Registered($user));
-        Auth::login($user);
-        $responseBody = 'ok';
-        $responseCode = 200;
-
-        return response($responseBody, $responseCode)
-            ->header('Content-Type', 'text/plain');
-    }
-
-    public function login(LoginRequest $request)
-    {
-        return $request->only('email', 'password');
-        $request->authenticate();
-
-        $request->session()->regenerate();
-
-        $responseBody = 'ok';
-        $responseCode = 200;
-
-        return response($responseBody, $responseCode)
-            ->header('Content-Type', 'text/plain');
-    }
-
-    public function logout(Request $request)
-    {
-        return $request;
-        Auth::guard('web')->logout();
-        
-        $request->session()->invalidate();
-
-        $request->session()->regenerateToken();
-        $responseBody = 'ok';
-        $responseCode = 200;
-        
-        return response($responseBody, $responseCode)
-            ->header('Content-Type', 'text/plain');
-    }
-
-    public function add_block(Request $request)
-    {
-        $data = $request->validate([
-            'user_id' => ['integer', Rule::exists('users', 'id')],
-            'blocked_user_id' => ['integer', Rule::exists('users', 'id')],
-        ]);
-
+        $data = $validator->safe()->only(['blocked_user_id', 'user_id']);
         Block::create($data);
+
+        $responseBody = 'ok';
+        $responseCode = 200;
+        
+        return response($responseBody, $responseCode)
+            ->header('Content-Type', 'text/plain');
     }
 
     public function delete_block(Block $block)
     {
         $block->delete();
+        $responseBody = 'ok';
+        $responseCode = 200;
+
+        return response($responseBody, $responseCode)
+            ->header('Content-Type', 'text/plain');
     }
 
     public function add_follow(Request $request)
     {
-        $data = $request->validate([
-            'user_id' => ['integer', Rule::exists('users', 'id')],
-            'followee_id' => ['integer', Rule::exists('users', 'id')],
+        $validator = Validator::make($request->all(), [
+            'followee_id' => ['required', 'integer', Rule::exists('users', 'id')],
+            'user_id' => ['required', 'integer', Rule::exists('users', 'id')],
         ]);
+        if ($validator->fails()) {
+            $response = response()->json([
+                'status' => 400,
+                'errors' => $validator->errors(),
+            ],400);
+            throw new HttpResponseException($response);
+        }
+        $data = $validator->safe()->only(['followee_id', 'user_id']);
+        Follow::create($data);
 
-        Block::create($data);
+        $responseBody = 'ok';
+        $responseCode = 200;
+        
+        return response($responseBody, $responseCode)
+            ->header('Content-Type', 'text/plain');
     }
 
     public function delete_follow(Follow $follow)
     {
         $follow->delete();
+        $responseBody = 'ok';
+        $responseCode = 200;
+
+        return response($responseBody, $responseCode)
+            ->header('Content-Type', 'text/plain');
     }
 
     /**
@@ -121,12 +88,24 @@ class UserController extends Controller
 
     public function search(Request $request)
     {
-        $users = User::paginate(20);
-        $key = $request->input('key');
-        $query = User::query();
-        $query->where('name', 'like', '%'.$key.'%');
-        $users = $query->paginate(20);
+        $validator = Validator::make($request->all(), [
+            'key' => ['required'],
+        ]);
+        if ($validator->fails()) {
+            $response = response()->json([
+                'status' => 400,
+                'errors' => $validator->errors(),
+            ],400);
+            throw new HttpResponseException($response);
+        }
+        $data = $validator->safe()->only(['key']);
+        $key = $data["key"];
+        $users = User::whereLike('name', $key)->paginate(20);
 
-        return $users;
+        $responseBody = $users;
+        $responseCode = 200;
+
+        return response($responseBody, $responseCode)
+            ->header('Content-Type', 'application/json');
     }
 }

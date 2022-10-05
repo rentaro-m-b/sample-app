@@ -22,18 +22,12 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::post('login', [AuthenticatedSessionController::class, 'store']);
-
-Route::controller(UserController::class)->prefix('users')->name('users')->group(function() {
-    Route::post('/', 'login')->name('.login')
-    ->middleware('guest');
-    Route::delete('/{user}', 'logout')->name('.logout');
-    Route::post('/register', 'store')->name('.store');
-    Route::post('/block', 'add_block')->name('.add_block');
-    Route::delete('/block', 'delete_block')->name('.delete_block');
-    Route::post('/follow', 'add_follow')->name('.add_follow');
-    Route::delete('/follow', 'delete_follow')->name('.delete_follow');
-    Route::get('/search', 'search')->name('.search');
+Route::controller(UserController::class)->prefix('user')->name('user')->group(function() {
+    Route::post('/block', 'add_block');
+    Route::delete('/block/{block}', 'delete_block');
+    Route::post('/follow', 'add_follow');
+    Route::delete('/follow/{follow}', 'delete_follow');
+    Route::get('/search', 'search');
 });
 
 Route::controller(TweetController::class)->prefix('tweet')->name('tweet')->group(function() {
