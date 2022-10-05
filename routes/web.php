@@ -1,9 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\TweetController;
-use App\Http\Controllers\ReplyController;
-use App\Models\Reply;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -25,19 +23,3 @@ Route::get('/dashboard', function () {
 })->middleware(['auth'])->name('dashboard');
 
 require __DIR__.'/auth.php';
-// 「->prefix('tweets')->name('tweets')」で株に指定した「.???」の親ルート的なものになっている。
-// {tweet}は変数であり、現在はtweet_idが入るようにviewではなっている。
-Route::controller(TweetController::class)->prefix('tweets')->name('tweets')->group(function() {
-    Route::get('/', 'list');
-    Route::get('/create', 'create')->name('.create');
-    Route::post('/create', 'store')->name('.store');
-    Route::get('/{tweet}', 'show')->name('.show');
-    Route::get('/{tweet}/edit', 'edit')->name('.edit');
-    Route::put('/{tweet}', 'update')->name('.update');
-    Route::delete('/{tweet}', 'destroy')->name('.destroy');
-});
-Route::controller(ReplyController::class)->prefix('replies')->name('replies')->group(function() {
-    Route::get('/{tweet}/create', 'create')->name('.create');
-    Route::post('/{tweet}/create', 'store')->name('.store');
-    Route::delete('/{reply}', 'destroy')->name('.destroy');
-});

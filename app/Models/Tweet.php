@@ -9,7 +9,6 @@ class Tweet extends Model
 {
     use HasFactory;
 
-    //protected $guarded = ['id', 'created_at'];
     protected $fillable = [
         'contents',
         'user_id',
@@ -21,5 +20,19 @@ class Tweet extends Model
 
     public function reply() {
         return $this->hasMany(Reply::class);
+    }
+
+    public function bookmark() {
+        return $this->hasMany(Bookmark::class);
+    }
+
+    public function scopeWhereLike($query, string $attribute, string $keyword, int $position = 0) {
+        $keyword = addcslashes($keyword, '\_%');
+        $condition = [
+            1 => "{$keyword}%",
+            -1 => "%{$keyword}",
+        ][$position] ?? "%{$keyword}%";
+
+        return $query->where($attribute, 'LIKE', $condition);
     }
 }

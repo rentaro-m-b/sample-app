@@ -10,6 +10,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Http\Exceptions\HttpResponseException;
+
 
 class RegisteredUserController extends Controller
 {
@@ -33,14 +36,21 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'name' => ['required', 'string', 'max:255'],
             'age' => ['integer', 'nullable'],
             'address' => ['string', 'nullable', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'password' => ['required', Rules\Password::defaults()],
         ]);
-
+        if ($validator->fails()) {
+            $response = response()->json([
+                'status' => 400,
+                'errors' => $validator->errors(),
+            ],400);
+            throw new HttpResponseException($response);
+        }
+        
         $user = User::create([
             'name' => $request->name,
             'age' => $request->age,
@@ -50,9 +60,12 @@ class RegisteredUserController extends Controller
         ]);
 
         event(new Registered($user));
-
         Auth::login($user);
 
-        return redirect(RouteServiceProvider::HOME);
+        $responseBody = 'ok';
+        $responseCode = 200;
+
+        return response($responseBody, $responseCode)
+            ->header('Content-Type', 'text/plain');
     }
 }
